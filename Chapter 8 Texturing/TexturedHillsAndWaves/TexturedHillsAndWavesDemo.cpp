@@ -39,6 +39,8 @@ private:
 	void BuildWaveGeometryBuffers();
 
 private:
+	ID3D11SamplerState* mSamplerState;
+	
 	ID3D11Buffer* mLandVB;
 	ID3D11Buffer* mLandIB;
 
@@ -140,7 +142,7 @@ TexturedHillsAndWavesApp::~TexturedHillsAndWavesApp()
 	ReleaseCOM(mWavesIB);
 	ReleaseCOM(mGrassMapSRV);
 	ReleaseCOM(mWavesMapSRV);
-
+	ReleaseCOM(mSamplerState);
 	Effects::DestroyAll();
 	InputLayouts::DestroyAll();
 }
@@ -158,6 +160,21 @@ bool TexturedHillsAndWavesApp::Init()
 
 	HR(CreateDDSTextureFromFile(md3dDevice, 
 		L"Textures/grass.dds", 0, &mGrassMapSRV));
+
+	D3D11_SAMPLER_DESC samplerDesc;
+	
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	samplerDesc.MaxAnisotropy = 4;
+
+	HR(md3dDevice->CreateSamplerState(&samplerDesc, &mSamplerState));
+
 
 	HR(CreateDDSTextureFromFile(md3dDevice,
 		L"Textures/water2.dds", 0, &mWavesMapSRV));
@@ -250,70 +267,64 @@ void TexturedHillsAndWavesApp::UpdateScene(float dt)
 void TexturedHillsAndWavesApp::DrawScene()
 {
 	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::LightSteelBlue));
-	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
- 
+	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
 	UINT stride = sizeof(Vertex::Basic32);
-    UINT offset = 0;
- 
-	XMMATRIX view  = XMLoadFloat4x4(&mView);
-	XMMATRIX proj  = XMLoadFloat4x4(&mProj);
+	UINT offset = 0;
+
+	XMMATRIX view = XMLoadFloat4x4(&mView);
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	XMMATRIX viewProj = view*proj;
 
 	// Set per frame constants.
 	Effects::BasicFX->SetDirLights(mDirLights);
 	Effects::BasicFX->SetEyePosW(mEyePosW);
- 
-	ID3DX11EffectTechnique* activeTech = Effects::BasicFX->Light3TexTech;
+	//
+	// Draw the hills.
+	//
+	md3dImmediateContext->IASetVertexBuffers(0, 1, &mLandVB, &stride, &offset);
+	md3dImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
 
-    D3DX11_TECHNIQUE_DESC techDesc;
-	activeTech->GetDesc( &techDesc );
-    for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		//
-		// Draw the hills.
-		//
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mLandVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
+	// Set per object constants.
+	XMMATRIX world = XMLoadFloat4x4(&mLandWorld);
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+	XMMATRIX worldViewProj = XMMatrixTranspose(world*view*proj);
 
-		// Set per object constants.
-		XMMATRIX world = XMLoadFloat4x4(&mLandWorld);
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mGrassTexTransform));
-		Effects::BasicFX->SetMaterial(mLandMat);
-		Effects::BasicFX->SetDiffuseMap(mGrassMapSRV);
+	Effects::BasicFX->SetWorld(world);
+	Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+	Effects::BasicFX->SetWorldViewProj(worldViewProj);
+	Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mGrassTexTransform));
+	Effects::BasicFX->SetMaterial(mLandMat);
+	Effects::BasicFX->SetDiffuseMap(mGrassMapSRV);
+	Effects::BasicFX->SetSamplerState(mSamplerState);
+	Effects::BasicFX->ApplyChanges(md3dImmediateContext);
+	Effects::BasicFX->SetEffect(md3dImmediateContext);
+	md3dImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
 
-		activeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
+	//
+	// Draw the waves.
+	//
+	md3dImmediateContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
+	md3dImmediateContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
 
-		//
-		// Draw the waves.
-		//
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mWavesVB, &stride, &offset);
-		md3dImmediateContext->IASetIndexBuffer(mWavesIB, DXGI_FORMAT_R32_UINT, 0);
+	// Set per object constants.
+	world = XMLoadFloat4x4(&mWavesWorld);
+	worldInvTranspose = MathHelper::InverseTranspose(world);
+	worldViewProj = XMMatrixTranspose(world*view*proj);
 
-		// Set per object constants.
-		world = XMLoadFloat4x4(&mWavesWorld);
-		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*view*proj;
-		
-		Effects::BasicFX->SetWorld(world);
-		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::BasicFX->SetWorldViewProj(worldViewProj);
-		Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mWaterTexTransform));
-		Effects::BasicFX->SetMaterial(mWavesMat);
-		Effects::BasicFX->SetDiffuseMap(mWavesMapSRV);
+	Effects::BasicFX->SetWorld(world);
+	Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
+	Effects::BasicFX->SetWorldViewProj(worldViewProj);
+	Effects::BasicFX->SetTexTransform(XMLoadFloat4x4(&mWaterTexTransform));
+	Effects::BasicFX->SetMaterial(mWavesMat);
+	Effects::BasicFX->SetDiffuseMap(mWavesMapSRV);
+	Effects::BasicFX->ApplyChanges(md3dImmediateContext);
+	Effects::BasicFX->SetEffect(md3dImmediateContext);
+	md3dImmediateContext->DrawIndexed(3 * mWaves.TriangleCount(), 0, 0);
 
-		activeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
-		md3dImmediateContext->DrawIndexed(3*mWaves.TriangleCount(), 0, 0);
-    }
 
 	HR(mSwapChain->Present(0, 0));
 }

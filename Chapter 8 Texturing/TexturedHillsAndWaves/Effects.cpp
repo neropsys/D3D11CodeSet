@@ -6,7 +6,7 @@
 
 #pragma region Effect
 Effect::Effect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader)
-	: mFX(0)
+	: mVertexShader(nullptr), mPixelShader(nullptr)
 {
 	DWORD shaderFlags = 0;
 #if defined( DEBUG ) || defined( _DEBUG )
@@ -40,12 +40,22 @@ Effect::~Effect()
 {
 	ReleaseCOM(mPSBlob);
 	ReleaseCOM(mVSBlob);
+	ReleaseCOM(mSamplerState);
 }
+
+void Effect::SetEffect(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->PSSetShader(mPixelShader, NULL, 0);
+	deviceContext->VSSetShader(mVertexShader, NULL, 0);
+	deviceContext->PSSetShaderResources(0, 1, &mDiffuseMap);
+	deviceContext->PSSetSamplers(0, 1, &mSamplerState);
+}
+
 #pragma endregion
 
 #pragma region BasicEffect
-BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
+BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader)
+	:Effect(device, vertexShader, pixelShader)
 {
 	mObjectConstantBuffer.Initialize(device);
 	mFrameConstantBuffer.Initialize(device);
@@ -59,6 +69,17 @@ void BasicEffect::SetDirLights(const DirectionalLight* lights)
 	mFrameConstantBuffer.Data.mDirLights[0] = lights[0];
 	mFrameConstantBuffer.Data.mDirLights[1] = lights[1];
 	mFrameConstantBuffer.Data.mDirLights[2] = lights[2];
+}
+
+void BasicEffect::ApplyChanges(ID3D11DeviceContext* deviceContext)
+{
+	mFrameConstantBuffer.ApplyChanges(deviceContext);
+	mObjectConstantBuffer.ApplyChanges(deviceContext);
+
+	ID3D11Buffer* buffer[2] = { mObjectConstantBuffer.Buffer(), mFrameConstantBuffer.Buffer() };
+
+	deviceContext->VSSetConstantBuffers(0, 1, &buffer[0]);
+	deviceContext->PSSetConstantBuffers(0, 2, buffer);
 }
 
 #pragma endregion

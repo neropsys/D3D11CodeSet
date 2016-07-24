@@ -216,7 +216,7 @@ cbuffer cbPerFrame: register(b1)
 	float  gFogRange;
 	float4 gFogColor;
 };
-Texture2D gDiffuseMap: register(t0);;
+Texture2D gDiffuseMap: register(t0);
 
 struct VertexOut
 {
@@ -226,14 +226,7 @@ struct VertexOut
 	float2 Tex     : TEXCOORD;
 };
 
-SamplerState samAnisotropic
-{
-	Filter = ANISOTROPIC;
-	MaxAnisotropy = 4;
-
-	AddressU = WRAP;
-	AddressV = WRAP;
-};
+SamplerState samAnisotropic;
 float4 main(VertexOut pin, uniform int gLightCount) : SV_Target
 {
 	// Interpolating normal can unnormalize it, so normalize it.

@@ -19,6 +19,12 @@
     <Filter Include="FX">
       <UniqueIdentifier>{1b12c863-4f09-4d94-9277-c74356be6a76}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ConstantBuffers">
+      <UniqueIdentifier>{8aecb62a-3af6-4d4e-ba4b-f6e8265b45c0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{7e14472b-7708-4706-bca1-a01c4183e755}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="FX\LightHelper.fx">
@@ -94,10 +100,27 @@
     <ClInclude Include="Effects.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files\ConstantBuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files\ConstantBuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Common\ConstantBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="FX\Basic.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SimplePixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -16,14 +16,15 @@
 class Effect
 {
 public:
-	Effect(ID3D11Device* device, const std::wstring& filename);
+	Effect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader);
 	virtual ~Effect();
-
+	void SetEffect(ID3D11DeviceContext* deviceContext);
 private:
 	Effect(const Effect& rhs);
 	Effect& operator=(const Effect& rhs);
 
 protected:
+	ID3D11SamplerState* mSamplerState;
 	ID3D11ShaderResourceView* mDiffuseMap;
 	ID3D11PixelShader* mPixelShader;
 	ID3D11VertexShader* mVertexShader;
@@ -36,17 +37,17 @@ protected:
 class BasicEffect : public Effect
 {
 public:
-	BasicEffect(ID3D11Device* device, const std::wstring& filename);
+	BasicEffect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader);
 	~BasicEffect();
-
 	void SetWorldViewProj(CXMMATRIX M)                  { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorldViewProj, M); }
 	void SetWorld(CXMMATRIX M)                          { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorld, M); }
-	void SetWorldInvTranspose(CXMMATRIX M)              { WorldInvTranspose->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetTexTransform(CXMMATRIX M)                   { TexTransform->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetEyePosW(const XMFLOAT3& v)                  { EyePosW->SetRawValue(&v, 0, sizeof(XMFLOAT3)); }
-	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
-	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
-	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
+	void SetWorldInvTranspose(CXMMATRIX M)              { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorldInvTranspose, M); }
+	void SetTexTransform(CXMMATRIX M)                   { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mTexTransform, M); }
+	void SetEyePosW(const XMFLOAT3& v)					{ mFrameConstantBuffer.Data.mEyePosW = v; }
+	void SetSamplerState(ID3D11SamplerState* samplerState) { mSamplerState = samplerState; }
+	void SetDirLights(const DirectionalLight* lights);
+	void SetMaterial(const Material& mat)				{ mObjectConstantBuffer.Data.mMaterial = mat; }
+	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { mDiffuseMap = tex; }
 	void ApplyChanges(ID3D11DeviceContext* deviceContext);
 
 
