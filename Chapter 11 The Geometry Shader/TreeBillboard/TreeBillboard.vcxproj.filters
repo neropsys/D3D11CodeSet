@@ -19,6 +19,12 @@
     <Filter Include="FX">
       <UniqueIdentifier>{1ed0df0a-ad15-420d-99e7-87346848d0aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{a9f54e06-85c3-43d0-b383-c81ee0ed0fe5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ConstantBuffer">
+      <UniqueIdentifier>{ca169ee3-8d6f-4f66-bd4f-02e025bd674e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\d3dApp.cpp">
@@ -88,6 +94,12 @@
     </ClInclude>
     <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

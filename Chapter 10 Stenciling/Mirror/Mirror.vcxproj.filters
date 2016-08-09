@@ -19,6 +19,12 @@
     <Filter Include="FX">
       <UniqueIdentifier>{79723c32-f17d-489a-ad2a-5c515c3cb4b8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ConstantBuffers">
+      <UniqueIdentifier>{a064ff3d-a586-429a-9010-6f17aaeeae3e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{a31b2c77-b3e1-4ced-89fd-44fee000549c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="FX\LightHelper.fx">
@@ -94,10 +100,24 @@
     <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files\ConstantBuffers</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files\ConstantBuffers</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="FX\Basic.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SimplePixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>
