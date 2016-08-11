@@ -16,7 +16,6 @@
 //***************************************************************************************
 
 #include "d3dApp.h"
-#include "d3dx11Effect.h"
 #include "GeometryGenerator.h"
 #include "MathHelper.h"
 #include "LightHelper.h"
@@ -24,7 +23,7 @@
 #include "Vertex.h"
 #include "RenderStates.h"
 #include "Waves.h"
-
+#include "DirectXTK/DDSTextureLoader.h"
 enum RenderOptions
 {
 	Lighting = 0,
@@ -57,6 +56,10 @@ private:
 	void DrawTreeSprites(CXMMATRIX viewProj);
 
 private:
+
+	ID3D11SamplerState* mSamplerState;
+	ID3D11SamplerState* mTreeSamplerState;
+
 	ID3D11Buffer* mLandVB;
 	ID3D11Buffer* mLandIB;
 
@@ -196,6 +199,7 @@ TreeBillboardApp::~TreeBillboardApp()
 	ReleaseCOM(mWavesMapSRV);
 	ReleaseCOM(mBoxMapSRV);
 	ReleaseCOM(mTreeTextureMapArraySRV);
+	
 
 	Effects::DestroyAll();
 	InputLayouts::DestroyAll();
@@ -214,14 +218,14 @@ bool TreeBillboardApp::Init()
 	InputLayouts::InitAll(md3dDevice);
 	RenderStates::InitAll(md3dDevice);
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/grass.dds", 0, 0, &mGrassMapSRV, 0 ));
+	HR(CreateDDSTextureFromFile(md3dDevice,
+		L"Textures/grass.dds", 0, &mGrassMapSRV));
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/water2.dds", 0, 0, &mWavesMapSRV, 0 ));
+	HR(CreateDDSTextureFromFile(md3dDevice,
+		L"Textures/water2.dds", 0, &mWavesMapSRV));
 
-	HR(D3DX11CreateShaderResourceViewFromFile(md3dDevice, 
-		L"Textures/WireFence.dds", 0, 0, &mBoxMapSRV, 0 ));
+	HR(CreateDDSTextureFromFile(md3dDevice,
+		L"Textures/WireFence.dds", 0, &mBoxMapSRV));
 
 	std::vector<std::wstring> treeFilenames;
 	treeFilenames.push_back(L"Textures/tree0.dds");
@@ -230,7 +234,33 @@ bool TreeBillboardApp::Init()
 	treeFilenames.push_back(L"Textures/tree3.dds");
 
 	mTreeTextureMapArraySRV = d3dHelper::CreateTexture2DArraySRV(
-		md3dDevice, md3dImmediateContext, treeFilenames, DXGI_FORMAT_R8G8B8A8_UNORM);
+		md3dDevice, md3dImmediateContext, treeFilenames);
+
+
+	D3D11_SAMPLER_DESC samplerDesc;
+
+	ZeroMemory(&samplerDesc, sizeof(samplerDesc));
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+	samplerDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+	samplerDesc.MinLOD = 0;
+	samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
+	samplerDesc.MaxAnisotropy = 4;
+
+	HR(md3dDevice->CreateSamplerState(&samplerDesc, &mSamplerState));
+
+
+	samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+	samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+	samplerDesc.MaxLOD =0;
+	HR(md3dDevice->CreateSamplerState(&samplerDesc, &mTreeSamplerState));
+
+
+
 
 	BuildLandGeometryBuffers();
 	BuildWaveGeometryBuffers();
@@ -346,7 +376,7 @@ void TreeBillboardApp::DrawScene()
  
 	XMMATRIX view  = XMLoadFloat4x4(&mView);
 	XMMATRIX proj  = XMLoadFloat4x4(&mProj);
-	XMMATRIX viewProj = view*proj;
+	XMMATRIX viewProj = XMMatrixTranspose(view*proj);
 
 	//
 	// Draw the tree sprites
@@ -372,45 +402,39 @@ void TreeBillboardApp::DrawScene()
 	Effects::BasicFX->SetFogColor(Colors::Silver);
 	Effects::BasicFX->SetFogStart(15.0f);
 	Effects::BasicFX->SetFogRange(175.0f);
-
+	Effects::BasicFX->mFrameConstantBuffer.Data.gLightCount = 3;
 	//
-	// Figure out which technique to use.
+	// Figure out which technique to use on Box.
 	//
-	ID3DX11EffectTechnique* boxTech;
-	ID3DX11EffectTechnique* landAndWavesTech;
- 
 	switch(mRenderOptions)
 	{
 	case RenderOptions::Lighting:
-		boxTech = Effects::BasicFX->Light3Tech;
-		landAndWavesTech = Effects::BasicFX->Light3Tech;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = false;
 		break;
 	case RenderOptions::Textures:
-		boxTech = Effects::BasicFX->Light3TexAlphaClipTech;
-		landAndWavesTech = Effects::BasicFX->Light3TexTech;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = false;
 		break;
 	case RenderOptions::TexturesAndFog:
-		boxTech = Effects::BasicFX->Light3TexAlphaClipFogTech;
-		landAndWavesTech = Effects::BasicFX->Light3TexFogTech;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = true;
 		break;
 	}
-
-	D3DX11_TECHNIQUE_DESC techDesc;
 
 	//
 	// Draw the box.
 	// 
-
-	boxTech->GetDesc( &techDesc );
-	for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
 		md3dImmediateContext->IASetVertexBuffers(0, 1, &mBoxVB, &stride, &offset);
 		md3dImmediateContext->IASetIndexBuffer(mBoxIB, DXGI_FORMAT_R32_UINT, 0);
 
 		// Set per object constants.
 		XMMATRIX world = XMLoadFloat4x4(&mBoxWorld);
 		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
+		XMMATRIX worldViewProj = XMMatrixTranspose(world*view*proj);
 		
 		Effects::BasicFX->SetWorld(world);
 		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
@@ -418,23 +442,44 @@ void TreeBillboardApp::DrawScene()
 		Effects::BasicFX->SetTexTransform(XMMatrixIdentity());
 		Effects::BasicFX->SetMaterial(mBoxMat);
 		Effects::BasicFX->SetDiffuseMap(mBoxMapSRV);
+		Effects::BasicFX->SetSamplerState(mSamplerState);
 
 		//md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		md3dImmediateContext->RSSetState(RenderStates::NoCullRS);
-		boxTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		Effects::BasicFX->ApplyChanges(md3dImmediateContext);
+		Effects::BasicFX->SetEffect(md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(36, 0, 0);
 
 		// Restore default render state.
 		md3dImmediateContext->RSSetState(0);
+	
+
+
+	//
+	// Figure out which technique to use on hills and water.
+	//
+	switch (mRenderOptions)
+	{
+	case RenderOptions::Lighting:
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = false;
+		break;
+	case RenderOptions::Textures:
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = false;
+		break;
+	case RenderOptions::TexturesAndFog:
+		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = true;
+		break;
 	}
 
 	//
 	// Draw the hills and water with texture and fog (no alpha clipping needed).
 	//
-
-	landAndWavesTech->GetDesc( &techDesc );
-    for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
 		//
 		// Draw the hills.
 		//
@@ -442,9 +487,9 @@ void TreeBillboardApp::DrawScene()
 		md3dImmediateContext->IASetIndexBuffer(mLandIB, DXGI_FORMAT_R32_UINT, 0);
 
 		// Set per object constants.
-		XMMATRIX world = XMLoadFloat4x4(&mLandWorld);
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
+		world = XMLoadFloat4x4(&mLandWorld);
+		worldInvTranspose = MathHelper::InverseTranspose(world);
+		worldViewProj = XMMatrixTranspose(world*view*proj);
 		
 		Effects::BasicFX->SetWorld(world);
 		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
@@ -453,7 +498,9 @@ void TreeBillboardApp::DrawScene()
 		Effects::BasicFX->SetMaterial(mLandMat);
 		Effects::BasicFX->SetDiffuseMap(mGrassMapSRV);
 
-		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		Effects::BasicFX->ApplyChanges(md3dImmediateContext);
+		Effects::BasicFX->SetEffect(md3dImmediateContext);
+
 		md3dImmediateContext->DrawIndexed(mLandIndexCount, 0, 0);
 
 		//
@@ -465,7 +512,7 @@ void TreeBillboardApp::DrawScene()
 		// Set per object constants.
 		world = XMLoadFloat4x4(&mWavesWorld);
 		worldInvTranspose = MathHelper::InverseTranspose(world);
-		worldViewProj = world*view*proj;
+		worldViewProj = XMMatrixTranspose(world*view*proj);
 		
 		Effects::BasicFX->SetWorld(world);
 		Effects::BasicFX->SetWorldInvTranspose(worldInvTranspose);
@@ -475,12 +522,13 @@ void TreeBillboardApp::DrawScene()
 		Effects::BasicFX->SetDiffuseMap(mWavesMapSRV);
 
 		md3dImmediateContext->OMSetBlendState(RenderStates::TransparentBS, blendFactor, 0xffffffff);
-		landAndWavesTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+		Effects::BasicFX->ApplyChanges(md3dImmediateContext);
+		Effects::BasicFX->SetEffect(md3dImmediateContext);
 		md3dImmediateContext->DrawIndexed(3*mWaves.TriangleCount(), 0, 0);
 
 		// Restore default blend state
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-    }
+    
 
 	HR(mSwapChain->Present(0, 0));
 }
@@ -735,30 +783,30 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 	Effects::TreeSpriteFX->SetViewProj(viewProj);
 	Effects::TreeSpriteFX->SetMaterial(mTreeMat);
 	Effects::TreeSpriteFX->SetTreeTextureMapArray(mTreeTextureMapArraySRV);
-
+	Effects::TreeSpriteFX->SetSamplerState(mTreeSamplerState);
+	Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gLightCount = 3;
 	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	md3dImmediateContext->IASetInputLayout(InputLayouts::TreePointSprite);
 	UINT stride = sizeof(Vertex::TreePointSprite);
     UINT offset = 0;
-
-	ID3DX11EffectTechnique* treeTech;
 	switch(mRenderOptions)
 	{
 	case RenderOptions::Lighting:
-		treeTech = Effects::TreeSpriteFX->Light3Tech;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gUseTexture = false;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gFogEnabled = false;
 		break;
 	case RenderOptions::Textures:
-		treeTech = Effects::TreeSpriteFX->Light3TexAlphaClipTech;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gFogEnabled = false;
 		break;
 	case RenderOptions::TexturesAndFog:
-		treeTech = Effects::TreeSpriteFX->Light3TexAlphaClipFogTech;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gUseTexture = true;
+		Effects::TreeSpriteFX->mFrameConstantBuffer.Data.gFogEnabled = true;
 		break;
 	}
-
-	D3DX11_TECHNIQUE_DESC techDesc;
-	treeTech->GetDesc( &techDesc );
-	for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
 		md3dImmediateContext->IASetVertexBuffers(0, 1, &mTreeSpritesVB, &stride, &offset);
 
 		float blendFactor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -767,9 +815,11 @@ void TreeBillboardApp::DrawTreeSprites(CXMMATRIX viewProj)
 		{
 			md3dImmediateContext->OMSetBlendState(RenderStates::AlphaToCoverageBS, blendFactor, 0xffffffff);
 		}
-		treeTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+
+		Effects::TreeSpriteFX->ApplyChanges(md3dImmediateContext);
+		Effects::TreeSpriteFX->SetEffect(md3dImmediateContext);
 		md3dImmediateContext->Draw(TreeCount, 0);
 
 		md3dImmediateContext->OMSetBlendState(0, blendFactor, 0xffffffff);
-	}
+	
 }

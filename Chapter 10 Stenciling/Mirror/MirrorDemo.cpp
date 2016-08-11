@@ -323,7 +323,7 @@ void MirrorApp::DrawScene()
 	case RenderOptions::Textures:
 		//light 3, texture true, alphaclip true, fog false
 		Effects::BasicFX->mFrameConstantBuffer.Data.gUseTexture = true;
-		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = false;
+		Effects::BasicFX->mFrameConstantBuffer.Data.gAlphaClip = true;
 		Effects::BasicFX->mFrameConstantBuffer.Data.gFogEnabled = false;
 		break;
 	case RenderOptions::TexturesAndFog:

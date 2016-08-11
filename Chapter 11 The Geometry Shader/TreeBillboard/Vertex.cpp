@@ -25,23 +25,17 @@ ID3D11InputLayout* InputLayouts::TreePointSprite = 0;
 
 void InputLayouts::InitAll(ID3D11Device* device)
 {
-	D3DX11_PASS_DESC passDesc;
-
 	//
 	// Basic32
 	//
-
-	Effects::BasicFX->Light1Tech->GetPassByIndex(0)->GetDesc(&passDesc);
-	HR(device->CreateInputLayout(InputLayoutDesc::Basic32, 3, passDesc.pIAInputSignature, 
-		passDesc.IAInputSignatureSize, &Basic32));
+	HR(device->CreateInputLayout(InputLayoutDesc::Basic32, 3, Effects::BasicFX->getVSBlob()->GetBufferPointer(),
+		Effects::BasicFX->getVSBlob()->GetBufferSize(), &Basic32));
 
 	//
 	// TreePointSprite
 	//
-
-	Effects::TreeSpriteFX->Light3Tech->GetPassByIndex(0)->GetDesc(&passDesc);
-	HR(device->CreateInputLayout(InputLayoutDesc::TreePointSprite, 2, passDesc.pIAInputSignature, 
-		passDesc.IAInputSignatureSize, &TreePointSprite));
+	HR(device->CreateInputLayout(InputLayoutDesc::TreePointSprite, 2, Effects::TreeSpriteFX->getVSBlob()->GetBufferPointer(), 
+		Effects::TreeSpriteFX->getVSBlob()->GetBufferSize(), &TreePointSprite));
 }
 
 void InputLayouts::DestroyAll()
