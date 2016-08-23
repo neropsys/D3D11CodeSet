@@ -9,20 +9,21 @@
 #define EFFECTS_H
 
 #include "d3dUtil.h"
-
+#include "ConstantBuffer.h"
+#include "cbPerFrame.h"
+#include "cbPerObject.h"
+#include "cbSettings.h"
 #pragma region Effect
 class Effect
 {
 public:
-	Effect(ID3D11Device* device, const std::wstring& filename);
+	Effect(ID3D11Device* device);
 	virtual ~Effect();
-
+	virtual void SetEffect(ID3D11DeviceContext* deviceContext);
 private:
 	Effect(const Effect& rhs);
 	Effect& operator=(const Effect& rhs);
-
-protected:
-	ID3DX11Effect* mFX;
+	
 };
 #pragma endregion
 
@@ -30,61 +31,36 @@ protected:
 class BasicEffect : public Effect
 {
 public:
-	BasicEffect(ID3D11Device* device, const std::wstring& filename);
+	BasicEffect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader);
 	~BasicEffect();
 
-	void SetWorldViewProj(CXMMATRIX M)                  { WorldViewProj->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetWorld(CXMMATRIX M)                          { World->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetWorldInvTranspose(CXMMATRIX M)              { WorldInvTranspose->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetTexTransform(CXMMATRIX M)                   { TexTransform->SetMatrix(reinterpret_cast<const float*>(&M)); }
-	void SetEyePosW(const XMFLOAT3& v)                  { EyePosW->SetRawValue(&v, 0, sizeof(XMFLOAT3)); }
-	void SetFogColor(const FXMVECTOR v)                 { FogColor->SetFloatVector(reinterpret_cast<const float*>(&v)); }
-	void SetFogStart(float f)                           { FogStart->SetFloat(f); }
-	void SetFogRange(float f)                           { FogRange->SetFloat(f); }
-	void SetDirLights(const DirectionalLight* lights)   { DirLights->SetRawValue(lights, 0, 3*sizeof(DirectionalLight)); }
-	void SetMaterial(const Material& mat)               { Mat->SetRawValue(&mat, 0, sizeof(Material)); }
-	void SetDiffuseMap(ID3D11ShaderResourceView* tex)   { DiffuseMap->SetResource(tex); }
+	void SetWorldViewProj(CXMMATRIX M) { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorldViewProj, M); }
+	void SetWorld(CXMMATRIX M) { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorld, M); }
+	void SetWorldInvTranspose(CXMMATRIX M) { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mWorldInvTranspose, M); }
+	void SetTexTransform(CXMMATRIX M) { XMStoreFloat4x4(&mObjectConstantBuffer.Data.mTexTransform, M); }
+	void SetEyePosW(const XMFLOAT3& v) { mFrameConstantBuffer.Data.mEyePosW = v; }
+	void SetSamplerState(ID3D11SamplerState* samplerState) { mSamplerState = samplerState; }
+	void SetFogColor(const FXMVECTOR v) { XMStoreFloat4(&mFrameConstantBuffer.Data.mFogColor, v); }
+	void SetFogStart(float f) { mFrameConstantBuffer.Data.mFogStart = f; }
+	void SetFogRange(float f) { mFrameConstantBuffer.Data.mFogRange = f; }
+	void SetDirLights(const DirectionalLight* lights);
+	void SetMaterial(const Material& mat) { mObjectConstantBuffer.Data.mMaterial = mat; }
+	void SetDiffuseMap(ID3D11ShaderResourceView* tex) { mDiffuseMap = tex; }
+	void ApplyChanges(ID3D11DeviceContext* deviceContext);
+	void SetEffect(ID3D11DeviceContext* deviceContext)override;
 
-	ID3DX11EffectTechnique* Light1Tech;
-	ID3DX11EffectTechnique* Light2Tech;
-	ID3DX11EffectTechnique* Light3Tech;
+	inline ID3DBlob* getVSBlob() { return mVSBlob; }
+	inline ID3DBlob* getPSBlob() { return mPSBlob; }
+	ConstantBuffer<cbPerObject> mObjectConstantBuffer;
+	ConstantBuffer<cbPerFrame> mFrameConstantBuffer;
 
-	ID3DX11EffectTechnique* Light0TexTech;
-	ID3DX11EffectTechnique* Light1TexTech;
-	ID3DX11EffectTechnique* Light2TexTech;
-	ID3DX11EffectTechnique* Light3TexTech;
+	ID3D11PixelShader* mPixelShader;
+	ID3D11VertexShader* mVertexShader;
+	ID3DBlob* mVSBlob;
 
-	ID3DX11EffectTechnique* Light0TexAlphaClipTech;
-	ID3DX11EffectTechnique* Light1TexAlphaClipTech;
-	ID3DX11EffectTechnique* Light2TexAlphaClipTech;
-	ID3DX11EffectTechnique* Light3TexAlphaClipTech;
-
-	ID3DX11EffectTechnique* Light1FogTech;
-	ID3DX11EffectTechnique* Light2FogTech;
-	ID3DX11EffectTechnique* Light3FogTech;
-
-	ID3DX11EffectTechnique* Light0TexFogTech;
-	ID3DX11EffectTechnique* Light1TexFogTech;
-	ID3DX11EffectTechnique* Light2TexFogTech;
-	ID3DX11EffectTechnique* Light3TexFogTech;
-
-	ID3DX11EffectTechnique* Light0TexAlphaClipFogTech;
-	ID3DX11EffectTechnique* Light1TexAlphaClipFogTech;
-	ID3DX11EffectTechnique* Light2TexAlphaClipFogTech;
-	ID3DX11EffectTechnique* Light3TexAlphaClipFogTech;
-
-	ID3DX11EffectMatrixVariable* WorldViewProj;
-	ID3DX11EffectMatrixVariable* World;
-	ID3DX11EffectMatrixVariable* WorldInvTranspose;
-	ID3DX11EffectMatrixVariable* TexTransform;
-	ID3DX11EffectVectorVariable* EyePosW;
-	ID3DX11EffectVectorVariable* FogColor;
-	ID3DX11EffectScalarVariable* FogStart;
-	ID3DX11EffectScalarVariable* FogRange;
-	ID3DX11EffectVariable* DirLights;
-	ID3DX11EffectVariable* Mat;
-
-	ID3DX11EffectShaderResourceVariable* DiffuseMap;
+	ID3DBlob* mPSBlob;
+	ID3D11SamplerState* mSamplerState;
+	ID3D11ShaderResourceView* mDiffuseMap;
 };
 #pragma endregion
 
@@ -92,19 +68,29 @@ public:
 class BlurEffect : public Effect
 {
 public:
-	BlurEffect(ID3D11Device* device, const std::wstring& filename);
+	BlurEffect(ID3D11Device* device, const std::wstring& horzBlurCShader, const std::wstring& vertBlurCShader);
 	~BlurEffect();
+	void SetVertEffect(ID3D11DeviceContext* deviceContext);
+	void SetHorzEffect(ID3D11DeviceContext* deviceContext);
+	void SetWeights(const float weights[9]);
+	void SetHorzInputMap(ID3D11ShaderResourceView* tex) { HorzInputMap = tex; }
+	void SetVertInputMap(ID3D11ShaderResourceView* tex) { VertInputMap = tex; }
+	void SetHorzOutputMap(ID3D11UnorderedAccessView* tex) { HorzOutputMap = tex; }
+	void SetVertOutputMap(ID3D11UnorderedAccessView* tex) { VertOutputMap = tex; }
+	void ApplyHorzChanges(ID3D11DeviceContext* deviceContext);
+	void ApplyVertChanges(ID3D11DeviceContext* deviceContext);
+	ConstantBuffer<cbSettings> mSettingBuffer;
+	
+	ID3D11ShaderResourceView* HorzInputMap;
+	ID3D11UnorderedAccessView* HorzOutputMap;
 
-	void SetWeights(const float weights[9])           { Weights->SetFloatArray(weights, 0, 9); }
-	void SetInputMap(ID3D11ShaderResourceView* tex)   { InputMap->SetResource(tex); }
-	void SetOutputMap(ID3D11UnorderedAccessView* tex) { OutputMap->SetUnorderedAccessView(tex); }
+	ID3D11ShaderResourceView* VertInputMap;
+	ID3D11UnorderedAccessView* VertOutputMap;
 
-	ID3DX11EffectTechnique* HorzBlurTech;
-	ID3DX11EffectTechnique* VertBlurTech;
-
-	ID3DX11EffectScalarVariable* Weights;
-	ID3DX11EffectShaderResourceVariable* InputMap;
-	ID3DX11EffectUnorderedAccessViewVariable* OutputMap;
+	ID3D11ComputeShader* mHorizComputeShader;
+	ID3D11ComputeShader* mVertComputeShader;
+	ID3DBlob* mHCSBlob;
+	ID3DBlob* mVCSBlob;
 };
 #pragma endregion
 

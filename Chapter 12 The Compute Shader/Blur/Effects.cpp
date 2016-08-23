@@ -5,94 +5,177 @@
 #include "Effects.h"
 
 #pragma region Effect
-Effect::Effect(ID3D11Device* device, const std::wstring& filename)
-	: mFX(0)
+Effect::Effect(ID3D11Device* device)
 {
-	std::ifstream fin(filename.c_str(), std::ios::binary);
-
-	fin.seekg(0, std::ios_base::end);
-	int size = (int)fin.tellg();
-	fin.seekg(0, std::ios_base::beg);
-	std::vector<char> compiledShader(size);
-
-	fin.read(&compiledShader[0], size);
-	fin.close();
 	
-	HR(D3DX11CreateEffectFromMemory(&compiledShader[0], size, 
-		0, device, &mFX));
+}
+
+void Effect::SetEffect(ID3D11DeviceContext* deviceContext)
+{
 }
 
 Effect::~Effect()
 {
-	ReleaseCOM(mFX);
+
+
 }
 #pragma endregion
 
 #pragma region BasicEffect
-BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
+BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& vertexShader, const std::wstring& pixelShader)
+	:Effect(device)
 {
-	Light1Tech    = mFX->GetTechniqueByName("Light1");
-	Light2Tech    = mFX->GetTechniqueByName("Light2");
-	Light3Tech    = mFX->GetTechniqueByName("Light3");
+	DWORD shaderFlags = 0;
+#if defined( DEBUG ) || defined( _DEBUG )
+	shaderFlags |= D3D10_SHADER_DEBUG;
+	shaderFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
+#endif
 
-	Light0TexTech = mFX->GetTechniqueByName("Light0Tex");
-	Light1TexTech = mFX->GetTechniqueByName("Light1Tex");
-	Light2TexTech = mFX->GetTechniqueByName("Light2Tex");
-	Light3TexTech = mFX->GetTechniqueByName("Light3Tex");
+	//convert wchar_t to char*
+	size_t size = wcslen(pixelShader.c_str()) * 2 + 2;
+	char* fileName = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, fileName, size, pixelShader.c_str(), size);
 
-	Light0TexAlphaClipTech = mFX->GetTechniqueByName("Light0TexAlphaClip");
-	Light1TexAlphaClipTech = mFX->GetTechniqueByName("Light1TexAlphaClip");
-	Light2TexAlphaClipTech = mFX->GetTechniqueByName("Light2TexAlphaClip");
-	Light3TexAlphaClipTech = mFX->GetTechniqueByName("Light3TexAlphaClip");
+	// Load cso files and create shaders
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mPSBlob));
+	HR(device->CreatePixelShader(mPSBlob->GetBufferPointer(), mPSBlob->GetBufferSize(), NULL, &mPixelShader));
 
-	Light1FogTech    = mFX->GetTechniqueByName("Light1Fog");
-	Light2FogTech    = mFX->GetTechniqueByName("Light2Fog");
-	Light3FogTech    = mFX->GetTechniqueByName("Light3Fog");
+	delete fileName;
 
-	Light0TexFogTech = mFX->GetTechniqueByName("Light0TexFog");
-	Light1TexFogTech = mFX->GetTechniqueByName("Light1TexFog");
-	Light2TexFogTech = mFX->GetTechniqueByName("Light2TexFog");
-	Light3TexFogTech = mFX->GetTechniqueByName("Light3TexFog");
+	size = wcslen(vertexShader.c_str()) * 2 + 2;
+	fileName = new char[size];
+	wcstombs_s(&c_size, fileName, size, vertexShader.c_str(), size);
 
-	Light0TexAlphaClipFogTech = mFX->GetTechniqueByName("Light0TexAlphaClipFog");
-	Light1TexAlphaClipFogTech = mFX->GetTechniqueByName("Light1TexAlphaClipFog");
-	Light2TexAlphaClipFogTech = mFX->GetTechniqueByName("Light2TexAlphaClipFog");
-	Light3TexAlphaClipFogTech = mFX->GetTechniqueByName("Light3TexAlphaClipFog");
-
-	WorldViewProj     = mFX->GetVariableByName("gWorldViewProj")->AsMatrix();
-	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
-	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
-	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
-	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
-	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
-	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
-	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
-	DirLights         = mFX->GetVariableByName("gDirLights");
-	Mat               = mFX->GetVariableByName("gMaterial");
-	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mVSBlob));
+	HR(device->CreateVertexShader(mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader));
+	delete fileName;
+	fileName = nullptr;
+	mObjectConstantBuffer.Initialize(device);
+	mFrameConstantBuffer.Initialize(device);
 }
 
 BasicEffect::~BasicEffect()
 {
+	ReleaseCOM(mPSBlob);
+	ReleaseCOM(mVSBlob);
+	ReleaseCOM(mSamplerState);
 }
+
+void BasicEffect::SetDirLights(const DirectionalLight* lights)
+{
+	mFrameConstantBuffer.Data.mDirLights[0] = lights[0];
+	mFrameConstantBuffer.Data.mDirLights[1] = lights[1];
+	mFrameConstantBuffer.Data.mDirLights[2] = lights[2];
+}
+
+void BasicEffect::ApplyChanges(ID3D11DeviceContext* deviceContext)
+{
+	mFrameConstantBuffer.ApplyChanges(deviceContext);
+	mObjectConstantBuffer.ApplyChanges(deviceContext);
+
+	ID3D11Buffer* buffer[2] = { mObjectConstantBuffer.Buffer(), mFrameConstantBuffer.Buffer() };
+
+	deviceContext->VSSetConstantBuffers(0, 1, &buffer[0]);
+	deviceContext->PSSetConstantBuffers(0, 2, buffer);
+}
+
+void BasicEffect::SetEffect(ID3D11DeviceContext* deviceContext)
+{
+
+	deviceContext->PSSetShader(mPixelShader, NULL, 0);
+	deviceContext->VSSetShader(mVertexShader, NULL, 0);
+	deviceContext->PSSetShaderResources(0, 1, &mDiffuseMap);
+	deviceContext->PSSetSamplers(0, 1, &mSamplerState);
+}
+
 #pragma endregion
 
 #pragma region BlurEffect
-BlurEffect::BlurEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
+BlurEffect::BlurEffect(ID3D11Device* device,
+	const std::wstring& horzBlurCShader,
+	const std::wstring& vertBlurCShader)
+	: Effect(device)
 {
-	HorzBlurTech = mFX->GetTechniqueByName("HorzBlur");
-	VertBlurTech = mFX->GetTechniqueByName("VertBlur");
+	DWORD shaderFlags = 0;
+#if defined( DEBUG ) || defined( _DEBUG )
+	shaderFlags |= D3D10_SHADER_DEBUG;
+	shaderFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
+#endif
 
-	Weights     = mFX->GetVariableByName("gWeights")->AsScalar();
-	InputMap    = mFX->GetVariableByName("gInput")->AsShaderResource();
-	OutputMap   = mFX->GetVariableByName("gOutput")->AsUnorderedAccessView();
+	//convert wchar_t to char*
+	size_t size = wcslen(vertBlurCShader.c_str()) * 2 + 2;
+	char* fileName = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, fileName, size, vertBlurCShader.c_str(), size);
+
+	// Load cso files and create shaders
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mVCSBlob));
+	HR(device->CreateComputeShader(mVCSBlob->GetBufferPointer(), mVCSBlob->GetBufferSize(), NULL, &mVertComputeShader));
+
+	delete fileName;
+	fileName = nullptr;
+	//convert wchar_t to char*
+	size = wcslen(horzBlurCShader.c_str()) * 2 + 2;
+	fileName = new char[size];
+	wcstombs_s(&c_size, fileName, size, horzBlurCShader.c_str(), size);
+
+	// Load cso files and create shaders
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mHCSBlob));
+	HR(device->CreateComputeShader(mHCSBlob->GetBufferPointer(), mHCSBlob->GetBufferSize(), NULL, &mHorizComputeShader));
+
+	delete fileName;
+	fileName = nullptr;
+
+	mSettingBuffer.Initialize(device);
 }
 
 BlurEffect::~BlurEffect()
 {
+	ReleaseCOM(mHCSBlob);
+	ReleaseCOM(mVCSBlob);
 }
+
+void BlurEffect::SetVertEffect(ID3D11DeviceContext * deviceContext)
+{
+	
+	deviceContext->CSSetShader(mVertComputeShader, NULL, 0);
+}
+
+void BlurEffect::SetHorzEffect(ID3D11DeviceContext* deviceContext)
+{
+	
+	deviceContext->CSSetShader(mHorizComputeShader, NULL, 0);
+}
+
+void BlurEffect::SetWeights(const float weights[9])
+{
+	for (int i = 0; i < 9; i++) {
+		mSettingBuffer.Data.mWeights[i] = weights[i];
+	}
+}
+
+void BlurEffect::ApplyHorzChanges(ID3D11DeviceContext* deviceContext)
+{
+	mSettingBuffer.ApplyChanges(deviceContext);
+
+	//ID3D11Buffer* buffer = mSettingBuffer.Buffer();
+	//deviceContext->CSSetConstantBuffers(2, 1, &buffer);
+	deviceContext->CSSetShaderResources(0, 1, &HorzInputMap);
+	deviceContext->CSSetUnorderedAccessViews(0, 1, &HorzOutputMap, 0);
+}
+
+void BlurEffect::ApplyVertChanges(ID3D11DeviceContext* deviceContext)
+{
+	mSettingBuffer.ApplyChanges(deviceContext);
+
+	//ID3D11Buffer* buffer = mSettingBuffer.Buffer();
+	//deviceContext->CSSetConstantBuffers(2, 1, &buffer);
+	deviceContext->CSSetShaderResources(0, 1, &VertInputMap);
+	deviceContext->CSSetUnorderedAccessViews(1, 1, &VertOutputMap, 0);
+}
+
+
 #pragma endregion
 
 #pragma region Effects
@@ -102,8 +185,8 @@ BlurEffect*       Effects::BlurFX       = 0;
 
 void Effects::InitAll(ID3D11Device* device)
 {
-	BasicFX = new BasicEffect(device, L"FX/Basic.fxo");
-	BlurFX  = new BlurEffect(device, L"FX/Blur.fxo");
+	BasicFX = new BasicEffect(device, L"SimpleVertexShader.cso", L"SimplePixelShader.cso");
+	BlurFX = new BlurEffect(device, L"HorzBlurComputeShader.cso", L"VertBlurComputeShader.cso");
 }
 
 void Effects::DestroyAll()

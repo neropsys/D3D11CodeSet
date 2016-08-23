@@ -8,7 +8,7 @@
 #define BLURFILTER_H
 
 #include <Windows.h>
-#include <xnamath.h>
+#include <DirectXMath.h>
 #include "d3dUtil.h"
 
 class BlurFilter
@@ -36,7 +36,7 @@ public:
 	///<summary>
 	/// Blurs the input texture blurCount times.  Note that this modifies the input texture, not a copy of it.
 	///</summary>
-	void BlurInPlace(ID3D11DeviceContext* dc, ID3D11ShaderResourceView* inputSRV, ID3D11UnorderedAccessView* inputUAV, int blurCount);
+	void BlurInPlace(ID3D11DeviceContext* dc, ID3D11ShaderResourceView* inputSRV, ID3D11UnorderedAccessView** inputUAV, int blurCount);
 
 private:
 

@@ -19,6 +19,12 @@
     <Filter Include="FX">
       <UniqueIdentifier>{46fa5581-9659-4137-8a37-f35984227178}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ConstantBuffer">
+      <UniqueIdentifier>{021e3799-1cd8-4aca-b70d-23edcb5953bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{399a5e87-0f1b-43ba-b237-5bffeae5a899}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Common\d3dApp.cpp">
@@ -95,6 +101,15 @@
     <ClInclude Include="BlurFilter.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="cbSettings.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="FX\LightHelper.fx">
@@ -108,5 +123,19 @@
     <CustomBuild Include="FX\Blur.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SimplePixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SimpleVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="HorzBlurComputeShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VertBlurComputeShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

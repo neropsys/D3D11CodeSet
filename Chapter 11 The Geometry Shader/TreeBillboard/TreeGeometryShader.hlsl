@@ -28,6 +28,18 @@ struct GeoOut
 	float2 Tex     : TEXCOORD;
 	uint   PrimID  : SV_PrimitiveID;
 };
+//
+// Compute texture coordinates to stretch texture over quad.
+// You should use constant buffer below, but I will use static array instead
+//
+
+static float2 gTexC[4] =
+{
+	float2(0.0f, 1.0f),
+	float2(0.0f, 0.0f),
+	float2(1.0f, 1.0f),
+	float2(1.0f, 0.0f)
+};
 cbuffer cbPerObject: register(b0)
 {
 	float4x4 gViewProj;
@@ -90,18 +102,7 @@ void main(point VertexOut gin[1],
 	// them as a triangle strip.
 	//
 	
-	//
-	// Compute texture coordinates to stretch texture over quad.
-	// You should use constant buffer below, but I will use static array instead
-	//
 
-	float2 gTexC[4] =
-	{
-		float2(0.0f, 1.0f),
-		float2(0.0f, 0.0f),
-		float2(1.0f, 1.0f),
-		float2(1.0f, 0.0f)
-	};
 
 	GeoOut gout;
 	[unroll]
