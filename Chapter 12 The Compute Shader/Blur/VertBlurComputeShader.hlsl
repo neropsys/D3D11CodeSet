@@ -1,14 +1,13 @@
 
-
-
-static const int gBlurRadius = 5;
 static const float gWeights[11] =
 {
 	0.05f, 0.05f, 0.1f, 0.1f, 0.1f, 0.2f, 0.1f, 0.1f, 0.1f, 0.05f, 0.05f,
 };
 
+static const int gBlurRadius = 5;
+
 Texture2D gInput : register(t0);
-RWTexture2D<float4> gOutput : register(u1);
+RWTexture2D<float4> gOutput : register(u0);
 
 #define N 256
 #define CacheSize (N + 2*gBlurRadius)

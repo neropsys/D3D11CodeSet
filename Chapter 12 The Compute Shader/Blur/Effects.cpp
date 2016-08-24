@@ -157,22 +157,15 @@ void BlurEffect::SetWeights(const float weights[9])
 
 void BlurEffect::ApplyHorzChanges(ID3D11DeviceContext* deviceContext)
 {
-	mSettingBuffer.ApplyChanges(deviceContext);
 
-	//ID3D11Buffer* buffer = mSettingBuffer.Buffer();
-	//deviceContext->CSSetConstantBuffers(2, 1, &buffer);
 	deviceContext->CSSetShaderResources(0, 1, &HorzInputMap);
 	deviceContext->CSSetUnorderedAccessViews(0, 1, &HorzOutputMap, 0);
 }
 
 void BlurEffect::ApplyVertChanges(ID3D11DeviceContext* deviceContext)
 {
-	mSettingBuffer.ApplyChanges(deviceContext);
-
-	//ID3D11Buffer* buffer = mSettingBuffer.Buffer();
-	//deviceContext->CSSetConstantBuffers(2, 1, &buffer);
 	deviceContext->CSSetShaderResources(0, 1, &VertInputMap);
-	deviceContext->CSSetUnorderedAccessViews(1, 1, &VertOutputMap, 0);
+	deviceContext->CSSetUnorderedAccessViews(0, 1, &VertOutputMap, 0);
 }
 
 

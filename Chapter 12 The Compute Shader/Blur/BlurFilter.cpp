@@ -100,25 +100,22 @@ void BlurFilter::Init(ID3D11Device* device, UINT width, UINT height, DXGI_FORMAT
 
 void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc, 
 							 ID3D11ShaderResourceView* inputSRV, 
-	                         ID3D11UnorderedAccessView** inputUAV,
+	                         ID3D11UnorderedAccessView* inputUAV,
 							 int blurCount)
 {
 	//
 	// Run the compute shader to blur the offscreen texture.
 	// 
 
+
 	for (int i = 0; i < blurCount; ++i)
 	{
-		// HORIZONTAL blur pass.
-		//Effects::BlurFX->HorzBlurTech->GetDesc( &techDesc );
-		//for(UINT p = 0; p < techDesc.Passes; ++p)
-
-
+		// HORIZONTAL blur
 		Effects::BlurFX->SetHorzInputMap(inputSRV);
+
 		Effects::BlurFX->SetHorzOutputMap(mBlurredOutputTexUAV);
 		Effects::BlurFX->ApplyHorzChanges(dc);
 		Effects::BlurFX->SetHorzEffect(dc);
-		//Effects::BlurFX->HorzBlurTech->GetPassByIndex(p)->Apply(0, dc);
 
 		// How many groups do we need to dispatch to cover a row of pixels, where each
 		// group covers 256 pixels (the 256 is defined in the ComputeShader).
@@ -136,23 +133,21 @@ void BlurFilter::BlurInPlace(ID3D11DeviceContext* dc,
 		dc->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
 
 		// VERTICAL blur pass.
-		//Effects::BlurFX->VertBlurTech->GetDesc( &techDesc );
-		//for(UINT p = 0; p < techDesc.Passes; ++p)
+
 
 		Effects::BlurFX->SetVertInputMap(mBlurredOutputTexSRV);
-		Effects::BlurFX->SetVertOutputMap(*inputUAV);
+		Effects::BlurFX->SetVertOutputMap(inputUAV);
 		Effects::BlurFX->ApplyVertChanges(dc);
 		Effects::BlurFX->SetVertEffect(dc);
-		//Effects::BlurFX->VertBlurTech->GetPassByIndex(p)->Apply(0, dc);
 
 		// How many groups do we need to dispatch to cover a column of pixels, where each
 		// group covers 256 pixels  (the 256 is defined in the ComputeShader).
 		UINT numGroupsY = (UINT)ceilf(mHeight / 256.0f);
 		dc->Dispatch(mWidth, numGroupsY, 1);
 
-
 		dc->CSSetShaderResources(0, 1, nullSRV);
 		dc->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
+
 	}
 
 	// Disable compute shader.

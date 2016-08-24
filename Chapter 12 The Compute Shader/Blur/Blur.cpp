@@ -354,8 +354,6 @@ void BlurApp::DrawScene()
 {
 	// Render to our offscreen texture.  Note that we can use the same depth/stencil buffer
 	// we normally use since our offscreen texture matches the dimensions.  
-
-	//mRenderTargetView should be offscreenview
 	ID3D11RenderTargetView* renderTargets[1] = { mOffscreenRTV };
 	md3dImmediateContext->OMSetRenderTargets(1, renderTargets, mDepthStencilView);
 	md3dImmediateContext->ClearRenderTargetView(mOffscreenRTV, reinterpret_cast<const float*>(&Colors::Silver));
@@ -378,7 +376,7 @@ void BlurApp::DrawScene()
 
 
 
-	mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, &mOffscreenUAV, 4);
+	mBlur.BlurInPlace(md3dImmediateContext, mOffscreenSRV, mOffscreenUAV, 4);
 
 	//
 	// Draw fullscreen quad with texture of blurred scene on it.
