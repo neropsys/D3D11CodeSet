@@ -73,7 +73,7 @@ fxgroup
                 //   o1.x <- <VS return value>.Color.x; o1.y <- <VS return value>.Color.y; o1.z <- <VS return value>.Color.z; o1.w <- <VS return value>.Color.w; 
                 //   o0.x <- <VS return value>.PosH.x; o0.y <- <VS return value>.PosH.y; o0.z <- <VS return value>.PosH.z; o0.w <- <VS return value>.PosH.w
                 //
-                #line 29 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 6 Drawing in Direct3D\Waves\FX\color.fx"
+                #line 29 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 6 Drawing in Direct3D\Waves\FX\color.fx"
                 mov r0.xyz, v0.xyzx
                 mov r0.w, l(1.000000)
                 dp4 r1.x, r0.xyzw, cb0[0].xyzw  // r1.x <- vout.PosH.x
@@ -120,7 +120,7 @@ fxgroup
                 //   v1.x <- pin.Color.x; v1.y <- pin.Color.y; v1.z <- pin.Color.z; v1.w <- pin.Color.w; 
                 //   o0.x <- <PS return value>.x; o0.y <- <PS return value>.y; o0.z <- <PS return value>.z; o0.w <- <PS return value>.w
                 //
-                #line 39 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 6 Drawing in Direct3D\Waves\FX\color.fx"
+                #line 39 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 6 Drawing in Direct3D\Waves\FX\color.fx"
                 mov o0.xyzw, v1.xyzw
                 ret 
                 // Approximately 2 instruction slots used

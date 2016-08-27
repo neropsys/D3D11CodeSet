@@ -92,7 +92,6 @@
     <ClCompile Include="BoxDemo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Common\ConstantBuffer.h" />
     <ClInclude Include="..\..\Common\d3dApp.h" />
     <ClInclude Include="..\..\Common\d3dUtil.h" />
     <ClInclude Include="..\..\Common\d3dx11effect.h" />

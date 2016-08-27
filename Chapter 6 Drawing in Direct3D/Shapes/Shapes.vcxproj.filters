@@ -65,9 +65,6 @@
     <ClInclude Include="..\..\Common\MathHelper.h">
       <Filter>Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\ConstantBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cbPerObject.h">
       <Filter>Header Files\ConstantBuffers</Filter>
     </ClInclude>

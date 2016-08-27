@@ -68,9 +68,6 @@
     <ClInclude Include="Waves.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Common\ConstantBuffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="cbPerObject.h">
       <Filter>Header Files\Constantbuffers</Filter>
     </ClInclude>

@@ -10,7 +10,6 @@
 //***************************************************************************************
 
 #include "d3dApp.h"
-#include "d3dx11Effect.h"
 #include "MathHelper.h"
 #include "cbPerObject.h"
 #include "ConstantBuffer.h"
