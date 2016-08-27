@@ -10,7 +10,6 @@
 //***************************************************************************************
 
 #include "d3dApp.h"
-#include "d3dx11Effect.h"
 #include "GeometryGenerator.h"
 #include "MathHelper.h"
 #include "LightHelper.h"
@@ -138,53 +137,49 @@ void BasicTessellation::UpdateScene(float dt)
 void BasicTessellation::DrawScene()
 {
 	md3dImmediateContext->ClearRenderTargetView(mRenderTargetView, reinterpret_cast<const float*>(&Colors::Silver));
-	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH|D3D11_CLEAR_STENCIL, 1.0f, 0);
+	md3dImmediateContext->ClearDepthStencilView(mDepthStencilView, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	md3dImmediateContext->IASetInputLayout(InputLayouts::Basic32);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
- 
-	float blendFactor[] = {0.0f, 0.0f, 0.0f, 0.0f};
+	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	XMMATRIX view  = XMLoadFloat4x4(&mView);
-	XMMATRIX proj  = XMLoadFloat4x4(&mProj);
+	float blendFactor[] = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+	XMMATRIX view = XMLoadFloat4x4(&mView);
+	XMMATRIX proj = XMLoadFloat4x4(&mProj);
 	XMMATRIX viewProj = view*proj;
 
 	md3dImmediateContext->IASetInputLayout(InputLayouts::Pos);
-    md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
- 
+	md3dImmediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST);
+
 	UINT stride = sizeof(Vertex::Pos);
-    UINT offset = 0;
- 
+	UINT offset = 0;
+
 	// Set per frame constants.
 	Effects::TessellationFX->SetEyePosW(mEyePosW);
 	Effects::TessellationFX->SetFogColor(Colors::Silver);
 	Effects::TessellationFX->SetFogStart(15.0f);
 	Effects::TessellationFX->SetFogRange(175.0f);
 
-	D3DX11_TECHNIQUE_DESC techDesc;
-	Effects::TessellationFX->TessTech->GetDesc( &techDesc );
 
-    for(UINT p = 0; p < techDesc.Passes; ++p)
-    {
-		md3dImmediateContext->IASetVertexBuffers(0, 1, &mQuadPatchVB, &stride, &offset);
+	md3dImmediateContext->IASetVertexBuffers(0, 1, &mQuadPatchVB, &stride, &offset);
 
-		// Set per object constants.
-		XMMATRIX world = XMMatrixIdentity();
-		XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
-		XMMATRIX worldViewProj = world*view*proj;
-		
-		Effects::TessellationFX->SetWorld(world);
-		Effects::TessellationFX->SetWorldInvTranspose(worldInvTranspose);
-		Effects::TessellationFX->SetWorldViewProj(worldViewProj);
-		Effects::TessellationFX->SetTexTransform(XMMatrixIdentity());
-		//Effects::TessellationFX->SetMaterial(0);
-		Effects::TessellationFX->SetDiffuseMap(0);
+	// Set per object constants.
+	XMMATRIX world = XMMatrixIdentity();
+	XMMATRIX worldInvTranspose = MathHelper::InverseTranspose(world);
+	XMMATRIX worldViewProj = XMMatrixTranspose(world*view*proj);
 
-		Effects::TessellationFX->TessTech->GetPassByIndex(p)->Apply(0, md3dImmediateContext);
+	Effects::TessellationFX->SetWorld(world);
+	Effects::TessellationFX->SetWorldInvTranspose(worldInvTranspose);
+	Effects::TessellationFX->SetWorldViewProj(worldViewProj);
+	Effects::TessellationFX->SetTexTransform(XMMatrixIdentity());
+	//Effects::TessellationFX->SetMaterial(0);
+	Effects::TessellationFX->SetDiffuseMap(0);
+	Effects::TessellationFX->ApplyChanges(md3dImmediateContext);
+	Effects::TessellationFX->SetEffect(md3dImmediateContext);
 
-		md3dImmediateContext->RSSetState(RenderStates::WireframeRS);
-		md3dImmediateContext->Draw(4, 0);
-	 }
+	md3dImmediateContext->RSSetState(RenderStates::WireframeRS);
+	md3dImmediateContext->Draw(4, 0);
+
 
 	HR(mSwapChain->Present(0, 0));
 }

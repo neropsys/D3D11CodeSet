@@ -90,7 +90,7 @@ fxgroup
                 //   vThreadIDInGroup.x <- groupThreadID.x; vThreadIDInGroup.y <- groupThreadID.y; vThreadIDInGroup.z <- groupThreadID.z; 
                 //   vThreadID.x <- dispatchThreadID.x; vThreadID.y <- dispatchThreadID.y; vThreadID.z <- dispatchThreadID.z
                 //
-                #line 17 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 13 The Tessellation Stages\BasicTessellation\FX\Blur.fx"
+                #line 17 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 13 The Tessellation Stages\BezierPatch\FX\Blur.fx"
                 mov r0.x, l(5)  // r0.x <- gBlurRadius
                 
                 #line 39
@@ -340,7 +340,7 @@ fxgroup
                 //   vThreadIDInGroup.x <- groupThreadID.x; vThreadIDInGroup.y <- groupThreadID.y; vThreadIDInGroup.z <- groupThreadID.z; 
                 //   vThreadID.x <- dispatchThreadID.x; vThreadID.y <- dispatchThreadID.y; vThreadID.z <- dispatchThreadID.z
                 //
-                #line 17 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 13 The Tessellation Stages\BasicTessellation\FX\Blur.fx"
+                #line 17 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 13 The Tessellation Stages\BezierPatch\FX\Blur.fx"
                 mov r0.x, l(5)  // r0.x <- gBlurRadius
                 
                 #line 87

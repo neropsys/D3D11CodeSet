@@ -19,6 +19,12 @@
     <Filter Include="FX">
       <UniqueIdentifier>{bac49df9-d11b-4ecc-8a6d-e42679f86486}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ConstantBuffer">
+      <UniqueIdentifier>{b084d8c1-f08c-4940-8ed5-9f0c8b0ddc42}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{604584b9-848f-4ccf-ab8a-81b3ed471715}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="FX\LightHelper.fx">
@@ -94,6 +100,12 @@
     <ClInclude Include="Vertex.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="cbPerObject.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
+    <ClInclude Include="cbPerFrame.h">
+      <Filter>Header Files\ConstantBuffer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="FX\Basic.fx">
@@ -105,5 +117,19 @@
     <CustomBuild Include="FX\BezierTessellation.fx">
       <Filter>FX</Filter>
     </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="TessVertexShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TessDomainShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TessPixelShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="TessHullShader.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

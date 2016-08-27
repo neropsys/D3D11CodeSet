@@ -24,23 +24,14 @@ ID3D11InputLayout* InputLayouts::Basic32 = 0;
 
 void InputLayouts::InitAll(ID3D11Device* device)
 {
-	D3DX11_PASS_DESC passDesc;
 
 	//
 	// Pos
 	//
 
-	Effects::TessellationFX->TessTech->GetPassByIndex(0)->GetDesc(&passDesc);
-	HR(device->CreateInputLayout(InputLayoutDesc::Pos, 1, passDesc.pIAInputSignature, 
-		passDesc.IAInputSignatureSize, &Pos));
+	HR(device->CreateInputLayout(InputLayoutDesc::Pos, 1, Effects::TessellationFX->getVSBlob()->GetBufferPointer(), 
+		Effects::TessellationFX->getVSBlob()->GetBufferSize(), &Pos));
 
-	//
-	// Basic32
-	//
-
-	Effects::BasicFX->Light1Tech->GetPassByIndex(0)->GetDesc(&passDesc);
-	HR(device->CreateInputLayout(InputLayoutDesc::Basic32, 3, passDesc.pIAInputSignature, 
-		passDesc.IAInputSignatureSize, &Basic32));
 }
 
 void InputLayouts::DestroyAll()

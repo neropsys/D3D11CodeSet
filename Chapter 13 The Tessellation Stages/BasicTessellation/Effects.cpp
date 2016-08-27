@@ -5,139 +5,147 @@
 #include "Effects.h"
 
 #pragma region Effect
-Effect::Effect(ID3D11Device* device, const std::wstring& filename)
-	: mFX(0)
+Effect::Effect(ID3D11Device* device)
 {
-	std::ifstream fin(filename.c_str(), std::ios::binary);
 
-	fin.seekg(0, std::ios_base::end);
-	int size = (int)fin.tellg();
-	fin.seekg(0, std::ios_base::beg);
-	std::vector<char> compiledShader(size);
-
-	fin.read(&compiledShader[0], size);
-	fin.close();
-	
-	HR(D3DX11CreateEffectFromMemory(&compiledShader[0], size, 
-		0, device, &mFX));
 }
-
+void Effect::SetEffect(ID3D11DeviceContext* deviceContext)
+{
+}
 Effect::~Effect()
 {
-	ReleaseCOM(mFX);
+
 }
 #pragma endregion
 
-#pragma region BasicEffect
-BasicEffect::BasicEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
-{
-	Light0Tech    = mFX->GetTechniqueByName("Light0");
-	Light1Tech    = mFX->GetTechniqueByName("Light1");
-	Light2Tech    = mFX->GetTechniqueByName("Light2");
-	Light3Tech    = mFX->GetTechniqueByName("Light3");
-
-	Light0TexTech = mFX->GetTechniqueByName("Light0Tex");
-	Light1TexTech = mFX->GetTechniqueByName("Light1Tex");
-	Light2TexTech = mFX->GetTechniqueByName("Light2Tex");
-	Light3TexTech = mFX->GetTechniqueByName("Light3Tex");
-
-	Light0TexAlphaClipTech = mFX->GetTechniqueByName("Light0TexAlphaClip");
-	Light1TexAlphaClipTech = mFX->GetTechniqueByName("Light1TexAlphaClip");
-	Light2TexAlphaClipTech = mFX->GetTechniqueByName("Light2TexAlphaClip");
-	Light3TexAlphaClipTech = mFX->GetTechniqueByName("Light3TexAlphaClip");
-
-	Light0FogTech    = mFX->GetTechniqueByName("Light0Fog");
-	Light1FogTech    = mFX->GetTechniqueByName("Light1Fog");
-	Light2FogTech    = mFX->GetTechniqueByName("Light2Fog");
-	Light3FogTech    = mFX->GetTechniqueByName("Light3Fog");
-
-	Light0TexFogTech = mFX->GetTechniqueByName("Light0TexFog");
-	Light1TexFogTech = mFX->GetTechniqueByName("Light1TexFog");
-	Light2TexFogTech = mFX->GetTechniqueByName("Light2TexFog");
-	Light3TexFogTech = mFX->GetTechniqueByName("Light3TexFog");
-
-	Light0TexAlphaClipFogTech = mFX->GetTechniqueByName("Light0TexAlphaClipFog");
-	Light1TexAlphaClipFogTech = mFX->GetTechniqueByName("Light1TexAlphaClipFog");
-	Light2TexAlphaClipFogTech = mFX->GetTechniqueByName("Light2TexAlphaClipFog");
-	Light3TexAlphaClipFogTech = mFX->GetTechniqueByName("Light3TexAlphaClipFog");
-
-	WorldViewProj     = mFX->GetVariableByName("gWorldViewProj")->AsMatrix();
-	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
-	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
-	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
-	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
-	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
-	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
-	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
-	DirLights         = mFX->GetVariableByName("gDirLights");
-	Mat               = mFX->GetVariableByName("gMaterial");
-	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
-}
-
-BasicEffect::~BasicEffect()
-{
-}
-#pragma endregion
-
-#pragma region BlurEffect
-BlurEffect::BlurEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
-{
-	HorzBlurTech = mFX->GetTechniqueByName("HorzBlur");
-	VertBlurTech = mFX->GetTechniqueByName("VertBlur");
-
-	Weights     = mFX->GetVariableByName("gWeights")->AsScalar();
-	InputMap    = mFX->GetVariableByName("gInput")->AsShaderResource();
-	OutputMap   = mFX->GetVariableByName("gOutput")->AsUnorderedAccessView();
-}
-
-BlurEffect::~BlurEffect()
-{
-}
-#pragma endregion
-
-#pragma region TessellationEffect
-TessellationEffect::TessellationEffect(ID3D11Device* device, const std::wstring& filename)
-	: Effect(device, filename)
-{
-	TessTech = mFX->GetTechniqueByName("Tess");
-
-	WorldViewProj     = mFX->GetVariableByName("gWorldViewProj")->AsMatrix();
-	World             = mFX->GetVariableByName("gWorld")->AsMatrix();
-	WorldInvTranspose = mFX->GetVariableByName("gWorldInvTranspose")->AsMatrix();
-	TexTransform      = mFX->GetVariableByName("gTexTransform")->AsMatrix();
-	EyePosW           = mFX->GetVariableByName("gEyePosW")->AsVector();
-	FogColor          = mFX->GetVariableByName("gFogColor")->AsVector();
-	FogStart          = mFX->GetVariableByName("gFogStart")->AsScalar();
-	FogRange          = mFX->GetVariableByName("gFogRange")->AsScalar();
-	DirLights         = mFX->GetVariableByName("gDirLights");
-	Mat               = mFX->GetVariableByName("gMaterial");
-	DiffuseMap        = mFX->GetVariableByName("gDiffuseMap")->AsShaderResource();
-}
-
-TessellationEffect::~TessellationEffect()
-{
-}
-#pragma endregion
-
-#pragma region Effects
-
-BasicEffect*        Effects::BasicFX        = 0;
-BlurEffect*         Effects::BlurFX       = 0;
 TessellationEffect* Effects::TessellationFX = 0;
 
+#pragma region Effects
 void Effects::InitAll(ID3D11Device* device)
 {
-	BasicFX        = new BasicEffect(device, L"FX/Basic.fxo");
-	BlurFX         = new BlurEffect(device, L"FX/Blur.fxo");
-	TessellationFX = new TessellationEffect(device, L"FX/Tessellation.fxo");
+	TessellationFX = new TessellationEffect(
+		device,
+		L"TessVertexShader.cso",
+		L"TessPixelShader.cso",
+		L"TessDomainShader.cso",
+		L"TessHullShader.cso");
 }
 
 void Effects::DestroyAll()
 {
-	SafeDelete(BasicFX);
-	SafeDelete(BlurFX);
 	SafeDelete(TessellationFX);
 }
+#pragma endregion
+
+#pragma region TessellationEffect
+
+TessellationEffect::TessellationEffect(
+	ID3D11Device* device,
+	const std::wstring& vertexShader,
+	const std::wstring& pixelShader,
+	const std::wstring& domainShader,
+	const std::wstring& hullShader)
+	:Effect(device),
+	mPSBlob(0),
+	mVSBlob(0),
+	mDSBlob(0),
+	mHSBlob(0),
+
+	mHullShader(0),
+	mDomainShader(0),
+	mVertexShader(0),
+	mPixelShader(0),
+	mSamplerState(0)
+{
+	DWORD shaderFlags = 0;
+#if defined( DEBUG ) || defined( _DEBUG )
+	shaderFlags |= D3D10_SHADER_DEBUG;
+	shaderFlags |= D3D10_SHADER_SKIP_OPTIMIZATION;
+#endif
+
+	//create pixel shader
+	//convert wchar_t to char*
+	size_t size = wcslen(pixelShader.c_str()) * 2 + 2;
+	char* fileName = new char[size];
+	size_t c_size;
+	wcstombs_s(&c_size, fileName, size, pixelShader.c_str(), size);
+
+	// Load cso files and create shaders
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mPSBlob));
+	HR(device->CreatePixelShader(mPSBlob->GetBufferPointer(), mPSBlob->GetBufferSize(), NULL, &mPixelShader));
+
+	delete fileName;
+
+	//create vertex shader
+	size = wcslen(vertexShader.c_str()) * 2 + 2;
+	fileName = new char[size];
+	wcstombs_s(&c_size, fileName, size, vertexShader.c_str(), size);
+
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mVSBlob));
+	HR(device->CreateVertexShader(mVSBlob->GetBufferPointer(), mVSBlob->GetBufferSize(), NULL, &mVertexShader));
+	delete fileName;
+	fileName = nullptr;
+
+	//create domain shader
+	size = wcslen(domainShader.c_str()) * 2 + 2;
+	fileName = new char[size];
+	wcstombs_s(&c_size, fileName, size, domainShader.c_str(), size);
+
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mDSBlob));
+	HR(device->CreateDomainShader(mDSBlob->GetBufferPointer(), mDSBlob->GetBufferSize(), NULL, &mDomainShader));
+	delete fileName;
+	fileName = nullptr;
+
+	//create hull shader
+	size = wcslen(hullShader.c_str()) * 2 + 2;
+	fileName = new char[size];
+	wcstombs_s(&c_size, fileName, size, hullShader.c_str(), size);
+
+	HR(ShaderHelper::LoadCompiledShader(fileName, &mHSBlob));
+	HR(device->CreateHullShader(mHSBlob->GetBufferPointer(), mHSBlob->GetBufferSize(), NULL, &mHullShader));
+	delete fileName;
+	fileName = nullptr;
+
+
+	mObjectConstantBuffer.Initialize(device);
+	mFrameConstantBuffer.Initialize(device);
+}
+
+TessellationEffect::~TessellationEffect()
+{
+	ReleaseCOM(mPSBlob);
+	ReleaseCOM(mVSBlob);
+	ReleaseCOM(mHSBlob);
+	ReleaseCOM(mDSBlob);
+	ReleaseCOM(mSamplerState);
+}
+
+void TessellationEffect::SetDirLights(const DirectionalLight* lights)
+{
+	mFrameConstantBuffer.Data.mDirLights[0] = lights[0];
+	mFrameConstantBuffer.Data.mDirLights[1] = lights[1];
+	mFrameConstantBuffer.Data.mDirLights[2] = lights[2];
+}
+
+void TessellationEffect::ApplyChanges(ID3D11DeviceContext* deviceContext)
+{
+	mFrameConstantBuffer.ApplyChanges(deviceContext);
+	mObjectConstantBuffer.ApplyChanges(deviceContext);
+
+	ID3D11Buffer* buffer[2] = { mObjectConstantBuffer.Buffer(), mFrameConstantBuffer.Buffer() };
+
+	deviceContext->DSSetConstantBuffers(0, 1, &buffer[0]);
+	deviceContext->HSSetConstantBuffers(0, 2, buffer);
+
+
+}
+
+void TessellationEffect::SetEffect(ID3D11DeviceContext* deviceContext)
+{
+	deviceContext->PSSetShader(mPixelShader, NULL, 0);
+	deviceContext->VSSetShader(mVertexShader, NULL, 0);
+	deviceContext->HSSetShader(mHullShader, NULL, 0);
+	deviceContext->DSSetShader(mDomainShader, NULL, 0);
+}
+
 #pragma endregion
