@@ -99,7 +99,7 @@ fxgroup
                 //   o1.x <- <VS return value>.PosW.x; o1.y <- <VS return value>.PosW.y; o1.z <- <VS return value>.PosW.z; 
                 //   o0.x <- <VS return value>.PosH.x; o0.y <- <VS return value>.PosH.y; o0.z <- <VS return value>.PosH.z; o0.w <- <VS return value>.PosH.w
                 //
-                #line 43 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
+                #line 43 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
                 mov r0.xyz, v0.xyzx
                 mov r0.w, l(1.000000)
                 dp4 r1.x, r0.xyzw, cb0[0].xyzw  // r1.x <- vout.PosW.x
@@ -233,7 +233,7 @@ fxgroup
                 //   v2.x <- pin.NormalW.x; v2.y <- pin.NormalW.y; v2.z <- pin.NormalW.z; 
                 //   o0.x <- <PS return value>.x; o0.y <- <PS return value>.y; o0.z <- <PS return value>.z; o0.w <- <PS return value>.w
                 //
-                #line 55 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
+                #line 55 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
                 dp3 r0.x, v2.xyzx, v2.xyzx
                 rsq r0.x, r0.x
                 mul r0.xyz, r0.xxxx, v2.xyzx  // r0.x <- pin.NormalW.x; r0.y <- pin.NormalW.y; r0.z <- pin.NormalW.z
@@ -260,7 +260,7 @@ fxgroup
                 mov r0.xyz, r0.xyzx
                 mov r1.xyz, r1.xyzx
                 
-                #line 66 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
+                #line 66 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
                 mov r12.xyz, l(0,0,0,0)  // r12.x <- diffuse.x; r12.y <- diffuse.y; r12.z <- diffuse.z
                 mov r13.xyz, l(0,0,0,0)  // r13.x <- spec.x; r13.y <- spec.y; r13.z <- spec.z
                 
@@ -293,7 +293,7 @@ fxgroup
                 movc r6.xyz, r1.wwww, r6.xyzx, r12.xyzx
                 movc r7.xyz, r1.wwww, r7.xyzx, r13.xyzx
                 
-                #line 67 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
+                #line 67 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
                 mov r5.xyz, r5.xyzx  // r5.x <- A.x; r5.y <- A.y; r5.z <- A.z
                 mov r6.xyz, r6.xyzx  // r6.x <- D.x; r6.y <- D.y; r6.z <- D.z
                 mov r7.xyz, r7.xyzx  // r7.x <- S.x; r7.y <- S.y; r7.z <- S.z
@@ -314,7 +314,7 @@ fxgroup
                 mov r0.xyz, r0.xyzx
                 mov r1.xyz, r1.xyzx
                 
-                #line 101 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
+                #line 101 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
                 mov r14.xyz, l(0,0,0,0)  // r14.x <- ambient.x; r14.y <- ambient.y; r14.z <- ambient.z
                 mov r15.xyz, l(0,0,0,0)  // r15.x <- diffuse.x; r15.y <- diffuse.y; r15.z <- diffuse.z
                 mov r16.xyz, l(0,0,0,0)  // r16.x <- spec.x; r16.y <- spec.y; r16.z <- spec.z
@@ -369,7 +369,7 @@ fxgroup
                   mul r16.xyz, r0.wwww, r6.xyzx  // r16.x <- spec.x; r16.y <- spec.y; r16.z <- spec.z
                 endif 
                 
-                #line 72 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
+                #line 72 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
                 mov r14.xyz, r14.xyzx  // r14.x <- A.x; r14.y <- A.y; r14.z <- A.z
                 mov r15.xyz, r15.xyzx  // r15.x <- D.x; r15.y <- D.y; r15.z <- D.z
                 mov r16.xyz, r16.xyzx  // r16.x <- S.x; r16.y <- S.y; r16.z <- S.z
@@ -392,7 +392,7 @@ fxgroup
                 mov r0.xyz, r0.xyzx
                 mov r1.xyz, r1.xyzx
                 
-                #line 153 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
+                #line 153 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\LightHelper.fx"
                 mov r15.xyz, l(0,0,0,0)  // r15.x <- ambient.x; r15.y <- ambient.y; r15.z <- ambient.z
                 mov r16.xyz, l(0,0,0,0)  // r16.x <- diffuse.x; r16.y <- diffuse.y; r16.z <- diffuse.z
                 mov r17.xyz, l(0,0,0,0)  // r17.x <- spec.x; r17.y <- spec.y; r17.z <- spec.z
@@ -456,7 +456,7 @@ fxgroup
                   mul r17.xyz, r1.wwww, r1.xyzx  // r17.x <- spec.x; r17.y <- spec.y; r17.z <- spec.z
                 endif 
                 
-                #line 77 "C:\Users\Administrator\Desktop\d3d11CodeSet1\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
+                #line 77 "C:\Users\Administrator\Documents\GitHub\D3D11CodeSet\Chapter 7 Lighting\Lighting\FX\Lighting.fx"
                 mov r15.xyz, r15.xyzx  // r15.x <- A.x; r15.y <- A.y; r15.z <- A.z
                 mov r16.xyz, r16.xyzx  // r16.x <- D.x; r16.y <- D.y; r16.z <- D.z
                 mov r17.xyz, r17.xyzx  // r17.x <- S.x; r17.y <- S.y; r17.z <- S.z
